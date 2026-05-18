@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: timeout_governance
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  dolphinscheduler:
+    image: apache/dolphinscheduler-standalone-server:3.2.1
+    ports:
+      - "12345:12345"
+    environment:
+      DATABASE: postgresql
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dolphinscheduler
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  timeout-governance:
+    build: .
+    ports:
+      - "8090:8090"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/timeout_governance
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DS_API_URL: http://dolphinscheduler:12345/dolphinscheduler
+      DS_API_TOKEN: ${DS_API_TOKEN:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      dolphinscheduler:
+        condition: service_started
+
+  prometheus:
+    image: prom/prometheus:v2.50.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deploy/docker/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - timeout-governance
+
+  grafana:
+    image: grafana/grafana:10.3.3
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres_data:
+  grafana_data:

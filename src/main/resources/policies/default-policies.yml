@@ -1,0 +1,35 @@
+- id: "policy-team-data-engineering"
+  name: "Data Engineering Team Default"
+  level: TEAM
+  targetId: ""
+  teamId: "data-engineering"
+  timeoutMinutes: 120
+  action: ALERT
+  alertChannels: "email,dingtalk"
+  escalationMinutes: 30
+  escalationContacts: "team-lead@company.com"
+  enabled: true
+
+- id: "policy-workflow-etl-daily"
+  name: "Daily ETL Workflow"
+  level: WORKFLOW
+  targetId: "workflow-etl-daily-001"
+  teamId: "data-engineering"
+  timeoutMinutes: 60
+  action: ALERT_AND_KILL
+  alertChannels: "dingtalk,email"
+  escalationMinutes: 15
+  escalationContacts: "oncall@company.com"
+  enabled: true
+
+- id: "policy-task-critical-export"
+  name: "Critical Export Task"
+  level: TASK
+  targetId: "task-export-critical-001"
+  teamId: "data-engineering"
+  timeoutMinutes: 30
+  action: ALERT
+  alertChannels: "wechat,email"
+  escalationMinutes: 10
+  escalationContacts: "manager@company.com"
+  enabled: true

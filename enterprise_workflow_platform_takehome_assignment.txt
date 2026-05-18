@@ -1,0 +1,231 @@
+# Enterprise Workflow Platform Engineering ¡ª Take-home Assignment
+
+Background  
+The company plans to build an enterprise-grade workflow orchestration platform based on either Apache Airflow or Apache DolphinScheduler. The platform must satisfy enterprise requirements including authentication, multi-team governance, GitOps, Infrastructure as Code, observability, operational stability, and production-grade deployment.  
+  
+This assignment focuses on:  
+- Open-source platform enhancement capability  
+- Source code analysis and modification capability  
+- Platform engineering and DevOps capability  
+- System design and operational thinking  
+- Production-readiness awareness  
+  
+Candidates are allowed to use AI tools (Copilot / ChatGPT / Claude etc.) during development. However, candidates must be able to clearly explain all design decisions, source code changes, and implementation details during the interview.
+
+## Assignment Options
+
+### Option 1 ¡ª DolphinScheduler Enterprise Timeout Governance System
+
+Objective
+
+Enhance Apache DolphinScheduler to support enterprise-grade task timeout governance and GitOps deployment.
+
+Mandatory Requirements
+
+1. Task Timeout Policy Engine
+
+- Support workflow-level timeout policies
+
+- Support task-level timeout policies
+
+- Support team-specific timeout policies
+
+- Support configurable timeout values
+
+- Timeout policy changes should not require code modification
+
+2. Enterprise Alerting
+
+- Trigger alert automatically after timeout
+
+- Support Whatsapp/Wechat/DingTalk/email notification
+
+- Design extensible alert architecture for future integrations
+
+- Include alert retry mechanism
+
+3. Alert Suppression
+
+- Same alert should not repeatedly trigger within a configurable time window
+
+4. Escalation Mechanism
+
+- If issue is not recovered within configurable time, escalate alert
+
+5. Audit Logging
+
+- Record timeout events
+
+- Record alert delivery result
+
+- Record user operations
+
+6. GitOps Deployment
+
+- Implement GitOps workflow
+
+- Support dev / uat / prod environments
+
+- Support rollback
+
+- Support environment-specific configuration
+
+- Support secret separation
+
+7. Observability
+
+- Expose Prometheus metrics
+
+- Include timeout metrics
+
+- Include alert metrics
+
+- Include workflow SLA metrics
+
+8. Deployment
+
+- Provide Docker Compose OR Kubernetes deployment
+
+- Provide one-command startup
+
+9. CI/CD
+
+- Implement CI pipeline
+
+- Include lint
+
+- Include unit tests
+
+- Include image build
+
+### Option 2 ¡ª Airflow Enterprise Cross-Workflow Dependency Orchestration
+
+Objective
+
+Enhance Apache Airflow to support enterprise-grade cross-workflow dependency orchestration and Infrastructure as Code deployment.
+
+Mandatory Requirements
+
+1. Cross-DAG Dependency Management
+
+- Support DAG-to-DAG dependency orchestration
+
+- Support configurable dependency rules
+
+- Support dependency timeout
+
+- Support dependency failure handling
+
+2. Event-Driven Workflow Triggering
+
+- Support dataset/event-based triggering
+
+- Support external callback/event integration design
+
+3. Dependency Visualization
+
+- Provide dependency graph visualization
+
+- DAG relationships should be visible in UI or generated graph
+
+4. Enterprise Governance
+
+- Prevent circular dependency
+
+- Provide dependency validation mechanism
+
+- Include audit logging
+
+5. Terraform Infrastructure Deployment
+
+- Use Terraform to provision infrastructure
+
+- Provision Kubernetes resources
+
+- Provision Airflow deployment
+
+- Provision database resources
+
+- Provision ingress/network resources
+
+- Provision secrets/configuration
+
+6. Deployment Requirements
+
+- Support terraform apply one-command deployment
+
+- Support environment separation
+
+- Support rollback/re-deploy
+
+7. Observability
+
+- Expose Prometheus metrics
+
+- Include DAG dependency metrics
+
+- Include scheduler health metrics
+
+8. CI/CD
+
+- Implement CI pipeline
+
+- Include lint
+
+- Include unit tests
+
+- Include image build
+
+## Important Constraints
+
+- Candidates should not simply install an existing plugin and stop there.
+
+- Candidates must explain why native functionality is insufficient.
+
+- Candidates must explain source code modification points.
+
+- Candidates must explain upgrade compatibility considerations.
+
+- Candidates should prioritize maintainability and extensibility.
+
+## Required Deliverables
+
+- Git repository
+
+- README
+
+- Architecture design document
+
+- Deployment instructions
+
+- CI/CD configuration
+
+- Infrastructure code
+
+- Optional demo video (5¨C10 minutes)
+
+## Evaluation Criteria
+
+|  |  |
+| --- | --- |
+| Category | Weight |
+| Source Code Understanding | 20% |
+| Engineering Quality | 20% |
+| Platform Design | 20% |
+| DevOps / IaC Capability | 20% |
+| Production Readiness | 10% |
+| Documentation & Communication | 10% |
+
+## Interview Discussion Topics
+
+- Why was this architecture selected?
+
+- Which source modules were modified?
+
+- How will future version upgrades be handled?
+
+- How is operational stability guaranteed?
+
+- How is RBAC / security handled?
+
+- How would this scale to hundreds of teams and thousands of workflows?

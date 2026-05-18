@@ -1,0 +1,99 @@
+这份大厂的企业级工作流平台工程 — 居家架构设计与通关作业（Take-home Assignment）非常有深度。它不仅考察基础的开发，更侧重于开源二次开发（内核修改）、平台工程（Platform Engineering）以及生产级稳定性（Production-Ready）的综合能力。
+
+以下是为您翻译的完整中文版本，保持了原有的专业技术术语和企业级上下文：
+
+企业级工作流平台工程 — 居家作业（Take-home Assignment）
+背景
+公司计划基于 Apache Airflow 或 Apache DolphinScheduler 构建一个企业级的工作流编排平台。该平台必须满足企业级的核心需求，包括：身份认证、多团队治理、GitOps、基础设施即代码（IaC）、可观测性、运行稳定性和生产级部署。
+
+本作业重点考察候选人的以下能力：
+
+开源平台的二次开发与增强能力
+
+源码分析与修改能力
+
+平台工程（Platform Engineering）与 DevOps 能力
+
+系统设计与运维思维
+
+生产环境就绪（Production-readiness）意识
+
+允许候选人在开发过程中使用 AI 工具（如 Copilot / ChatGPT / Claude 等）。但是，候选人必须能够在后续的面谈中，清晰地解释所有的设计决策、源码修改点以及具体的实现细节。
+
+课题选项（二选一）
+选项 1 — DolphinScheduler 企业级超时治理系统
+目标
+对 Apache DolphinScheduler 进行深度定制与增强，使其支持企业级的任务超时治理体系，并实现 GitOps 自动化部署。
+
+核心硬性需求
+任务超时策略引擎 (Task Timeout Policy Engine)
+
+支持工作流（Workflow）级别的超时策略。
+
+支持任务（Task）级别的超时策略。
+
+支持特定团队/租户（Team-specific）的超时策略。
+
+支持超时阈值（Timeout values）的可动态配置。
+
+超时策略的变更必须做到无需修改或重启代码（即时生效）。
+
+企业级告警 (Enterprise Alerting)
+
+触发超时后自动执行告警。
+
+支持 Whatsapp、企业微信、钉钉和邮件通知。
+
+设计高扩展性的告警架构，以便未来轻松集成其他通知渠道。
+
+必须包含告警重试机制（Retry mechanism）。
+
+告警抑制 (Alert Suppression)
+
+同一个告警在可配置的时间窗口（Time window）内，不得重复触发或频发。
+
+升级机制 (Escalation Mechanism)
+
+如果超时问题在指定时间内未得到恢复/处理，告警需自动升级（例如通知到更高层级的负责人）。
+
+审计日志 (Audit Logging)
+
+记录所有超时事件。
+
+记录每次告警的投递结果（成功/失败状态、耗时等）。
+
+记录用户对超时策略的操作行为（增删改查）。
+
+GitOps 部署 (GitOps Deployment)
+
+实现完整的 GitOps 工作流（如基于 ArgoCD 或 Flux）。
+
+完美支持开发（dev）、测试（uat）和生产（prod）多环境。
+
+支持一键回滚（Rollback）。
+
+支持环境差异化配置（Environment-specific configuration）。
+
+实现敏感信息隔离（Secret separation）。
+
+可观测性 (Observability)
+
+暴露 Prometheus 指标（Metrics）。
+
+指标需涵盖：超时指标、告警发送指标、工作流 SLA 指标。
+
+部署环境 (Deployment)
+
+提供 Docker Compose 或 Kubernetes (Helm Chart) 部署脚本。
+
+支持“一键启动”（One-command startup）。
+
+CI/CD 流程
+
+实现完整的 CI 流水线。
+
+包含代码静态检查（Lint）。
+
+包含单元测试（Unit tests）。
+
+包含 Docker 镜像自动化构建。
