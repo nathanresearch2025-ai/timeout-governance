@@ -1,0 +1,195 @@
+{
+  "info": {
+    "name": "Bank Batch Timeout Scenario Tests",
+    "description": "End-to-end test for bank day-end settlement workflow timeout governance.\n\nScenario: Bank day-end settlement workflow stuck — must alert oncall, kill the workflow, escalate to manager, and produce a complete audit trail for regulatory compliance.\n\nFlow:\n1. Verify the bank settlement policy is loaded (4-hour timeout, ALERT_AND_KILL)\n2. Inject a stuck workflow (running 300 minutes — exceeds 240-min timeout)\n3. Trigger detection manually\n4. Verify timeout event recorded with correct policy level and action\n5. Verify the workflow was killed (removed from running set)\n6. Verify audit trail contains TIMEOUT_DETECTED + TASK_KILLED entries\n7. Verify reconciliation workflow within timeout NOT triggered\n\nUsage: import this collection into Postman, set baseUrl to your backend host, then run the folder in order.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {"key": "baseUrl", "value": "http://1.14.131.61:8090", "type": "string"},
+    {"key": "stuckWorkflowId", "value": "wf-bank-settlement-20260519", "type": "string"},
+    {"key": "healthyWorkflowId", "value": "wf-bank-recon-20260519", "type": "string"}
+  ],
+  "item": [
+    {
+      "name": "01 - Cleanup Previous Mock State",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {"raw": "{{baseUrl}}/api/v1/mock-ds", "host": ["{{baseUrl}}"], "path": ["api","v1","mock-ds"]}
+      },
+      "event": [{"listen":"test","script":{"exec":[
+        "pm.test('Mock state cleared (204)', () => pm.response.to.have.status(204));"
+      ],"type":"text/javascript"}}]
+    },
+    {
+      "name": "02 - Verify Bank Settlement Policy Loaded",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/workflow-policies/target/workflow-bank-settlement-001",
+          "host": ["{{baseUrl}}"],
+          "path": ["api","v1","workflow-policies","target","workflow-bank-settlement-001"]
+        }
+      },
+      "event": [{"listen":"test","script":{"exec":[
+        "pm.test('Policy exists', () => pm.response.to.have.status(200));",
+        "const p = pm.response.json();",
+        "pm.test('Timeout is 240 minutes (4 hours)', () => pm.expect(p.timeoutMinutes).to.equal(240));",
+        "pm.test('Action is ALERT_AND_KILL', () => pm.expect(p.action).to.equal('ALERT_AND_KILL'));",
+        "pm.test('Has escalation contacts', () => pm.expect(p.escalationContacts).to.include('oncall-leader'));",
+        "pm.test('Multiple alert channels configured', () => pm.expect(p.alertChannels.split(',').length).to.be.at.least(2));"
+      ],"type":"text/javascript"}}]
+    },
+    {
+      "name": "03 - Inject Stuck Settlement Workflow (300 min running)",
+      "request": {
+        "method": "POST",
+        "header": [{"key":"Content-Type","value":"application/json"}],
+        "body": {"mode":"raw","raw":"{\n  \"workflowId\": \"workflow-bank-settlement-001\",\n  \"workflowName\": \"Bank Day-End Settlement - 2026-05-19\",\n  \"teamId\": \"bank-batch\",\n  \"status\": \"RUNNING_EXECUTION\",\n  \"totalTasks\": 12,\n  \"completedTasks\": 7,\n  \"startedMinutesAgo\": 300\n}"},
+        "url": {"raw":"{{baseUrl}}/api/v1/mock-ds/workflows","host":["{{baseUrl}}"],"path":["api","v1","mock-ds","workflows"]}
+      },
+      "event": [{"listen":"test","script":{"exec":[
+        "pm.test('Workflow injected (201)', () => pm.response.to.have.status(201));",
+        "const w = pm.response.json();",
+        "pm.test('Running for 300 minutes', () => pm.expect(w.runningMinutes).to.equal(300));",
+        "pm.test('Status is RUNNING', () => pm.expect(w.status).to.equal('RUNNING_EXECUTION'));"
+      ],"type":"text/javascript"}}]
+    },
+    {
+      "name": "04 - Inject Healthy Reconciliation Workflow (60 min running)",
+      "request": {
+        "method": "POST",
+        "header": [{"key":"Content-Type","value":"application/json"}],
+        "body": {"mode":"raw","raw":"{\n  \"workflowId\": \"workflow-bank-reconciliation-001\",\n  \"workflowName\": \"Bank Reconciliation - 2026-05-19\",\n  \"teamId\": \"bank-batch\",\n  \"status\": \"RUNNING_EXECUTION\",\n  \"totalTasks\": 5,\n  \"completedTasks\": 3,\n  \"startedMinutesAgo\": 60\n}"},
+        "url": {"raw":"{{baseUrl}}/api/v1/mock-ds/workflows","host":["{{baseUrl}}"],"path":["api","v1","mock-ds","workflows"]}
+      },
+      "event": [{"listen":"test","script":{"exec":[
+        "pm.test('Healthy workflow injected (201)', () => pm.response.to.have.status(201));",
+        "const w = pm.response.json();",
+        "pm.test('Running for only 60 minutes', () => pm.expect(w.runningMinutes).to.equal(60));"
+      ],"type":"text/javascript"}}]
+    },
+    {
+      "name": "05 - Confirm 2 Workflows Running",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {"raw":"{{baseUrl}}/api/v1/mock-ds/workflows","host":["{{baseUrl}}"],"path":["api","v1","mock-ds","workflows"]}
+      },
+      "event": [{"listen":"test","script":{"exec":[
+        "pm.test('Status 200', () => pm.response.to.have.status(200));",
+        "const obj = pm.response.json();",
+        "pm.test('2 workflows running', () => pm.expect(Object.keys(obj).length).to.equal(2));"
+      ],"type":"text/javascript"}}]
+    },
+    {
+      "name": "06 - Trigger Timeout Detection Manually",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {"raw":"{{baseUrl}}/api/v1/mock-ds/trigger-detection","host":["{{baseUrl}}"],"path":["api","v1","mock-ds","trigger-detection"]}
+      },
+      "event": [{"listen":"test","script":{"exec":[
+        "pm.test('Detection triggered (200)', () => pm.response.to.have.status(200));",
+        "setTimeout(() => {}, 1500);"
+      ],"type":"text/javascript"}}]
+    },
+    {
+      "name": "07 - Verify Stuck Workflow Was Killed",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {"raw":"{{baseUrl}}/api/v1/mock-ds/workflows","host":["{{baseUrl}}"],"path":["api","v1","mock-ds","workflows"]}
+      },
+      "event": [{"listen":"test","script":{"exec":[
+        "const obj = pm.response.json();",
+        "const ids = Object.keys(obj);",
+        "pm.test('Stuck workflow removed (killed)', () => pm.expect(ids).to.not.include('workflow-bank-settlement-001'));",
+        "pm.test('Healthy workflow still running', () => pm.expect(ids).to.include('workflow-bank-reconciliation-001'));"
+      ],"type":"text/javascript"}}]
+    },
+    {
+      "name": "08 - Verify Timeout Event Recorded",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw":"{{baseUrl}}/api/v1/timeout-events?page=0&size=20&teamId=bank-batch",
+          "host":["{{baseUrl}}"],
+          "path":["api","v1","timeout-events"],
+          "query":[{"key":"page","value":"0"},{"key":"size","value":"20"},{"key":"teamId","value":"bank-batch"}]
+        }
+      },
+      "event": [{"listen":"test","script":{"exec":[
+        "pm.test('Status 200', () => pm.response.to.have.status(200));",
+        "const data = pm.response.json();",
+        "const events = data.content || data;",
+        "const settlementEvents = events.filter(e => e.workflowId === 'workflow-bank-settlement-001');",
+        "pm.test('Settlement timeout event recorded', () => pm.expect(settlementEvents.length).to.be.at.least(1));",
+        "if (settlementEvents.length > 0) {",
+        "  const ev = settlementEvents[0];",
+        "  pm.test('Event has WORKFLOW level', () => pm.expect(ev.policyLevel).to.equal('WORKFLOW'));",
+        "  pm.test('Event action is ALERT_AND_KILL', () => pm.expect(ev.actionTaken).to.equal('ALERT_AND_KILL'));",
+        "  pm.test('Actual duration > policy timeout', () => pm.expect(ev.actualDurationMinutes).to.be.above(ev.timeoutMinutes));",
+        "  pm.test('Event team is bank-batch', () => pm.expect(ev.teamId).to.equal('bank-batch'));",
+        "}"
+      ],"type":"text/javascript"}}]
+    },
+    {
+      "name": "09 - Verify Audit Trail (Compliance Requirement)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw":"{{baseUrl}}/api/v1/audit/target/workflow/workflow-bank-settlement-001",
+          "host":["{{baseUrl}}"],
+          "path":["api","v1","audit","target","workflow","workflow-bank-settlement-001"]
+        }
+      },
+      "event": [{"listen":"test","script":{"exec":[
+        "pm.test('Audit endpoint reachable', () => pm.response.to.have.status(200));",
+        "const logs = pm.response.json();",
+        "pm.test('Audit log exists for stuck workflow', () => pm.expect(logs.length).to.be.at.least(2));",
+        "const detected = logs.filter(l => l.action === 'TIMEOUT_DETECTED');",
+        "const killed = logs.filter(l => l.action === 'TASK_KILLED');",
+        "pm.test('TIMEOUT_DETECTED entry present', () => pm.expect(detected.length).to.be.at.least(1));",
+        "pm.test('TASK_KILLED entry present', () => pm.expect(killed.length).to.be.at.least(1));",
+        "if (detected.length > 0) {",
+        "  pm.test('Detected entry has actor', () => pm.expect(detected[0].actor).to.not.be.empty);",
+        "  pm.test('Detected entry has detail', () => pm.expect(detected[0].detail).to.include('exceeded'));",
+        "}"
+      ],"type":"text/javascript"}}]
+    },
+    {
+      "name": "10 - Verify Healthy Workflow Did Not Trigger Event",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw":"{{baseUrl}}/api/v1/timeout-events?page=0&size=50&teamId=bank-batch",
+          "host":["{{baseUrl}}"],
+          "path":["api","v1","timeout-events"],
+          "query":[{"key":"page","value":"0"},{"key":"size","value":"50"},{"key":"teamId","value":"bank-batch"}]
+        }
+      },
+      "event": [{"listen":"test","script":{"exec":[
+        "const data = pm.response.json();",
+        "const events = data.content || data;",
+        "const reconEvents = events.filter(e => e.workflowId === 'workflow-bank-reconciliation-001');",
+        "pm.test('Healthy reconciliation workflow has no timeout event', () => pm.expect(reconEvents.length).to.equal(0));"
+      ],"type":"text/javascript"}}]
+    },
+    {
+      "name": "11 - Cleanup",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {"raw":"{{baseUrl}}/api/v1/mock-ds","host":["{{baseUrl}}"],"path":["api","v1","mock-ds"]}
+      },
+      "event": [{"listen":"test","script":{"exec":[
+        "pm.test('Mock state cleared (204)', () => pm.response.to.have.status(204));"
+      ],"type":"text/javascript"}}]
+    }
+  ]
+}

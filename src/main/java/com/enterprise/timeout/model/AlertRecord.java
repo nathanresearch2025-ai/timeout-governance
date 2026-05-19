@@ -22,6 +22,8 @@ public class AlertRecord {
     private Long timeoutEventId;
     private String channel;
     private String recipient;
+
+    @Column(length = 2000)
     private String message;
 
     @Enumerated(EnumType.STRING)

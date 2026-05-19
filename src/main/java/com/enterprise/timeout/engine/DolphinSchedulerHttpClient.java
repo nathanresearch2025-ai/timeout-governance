@@ -3,6 +3,7 @@ package com.enterprise.timeout.engine;
 import com.enterprise.timeout.config.GovernanceProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 @Slf4j
 @Component
+@ConditionalOnProperty(name = "timeout-governance.dolphinscheduler.mode", havingValue = "http")
 @RequiredArgsConstructor
 public class DolphinSchedulerHttpClient implements DolphinSchedulerClient {
 

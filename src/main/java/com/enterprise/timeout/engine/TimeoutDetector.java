@@ -30,10 +30,12 @@ public class TimeoutDetector {
 
     @Scheduled(fixedDelay = 30000)
     public void detectTimeouts() {
-        if (properties.getDolphinscheduler().getToken().isBlank()) {
-            return;
-        }
+        detectWorkflowTimeouts();
+        detectTaskTimeouts();
+    }
 
+    public void runDetectionNow() {
+        log.info("[Manual trigger] Running timeout detection now");
         detectWorkflowTimeouts();
         detectTaskTimeouts();
     }

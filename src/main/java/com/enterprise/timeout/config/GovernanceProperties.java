@@ -37,6 +37,7 @@ public class GovernanceProperties {
 
     @Data
     public static class DolphinSchedulerConfig {
+        private String mode = "mock";
         private String apiUrl = "http://localhost:12345/dolphinscheduler";
         private String token = "";
     }
