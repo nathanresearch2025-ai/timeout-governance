@@ -33,11 +33,46 @@ public class TimeoutDetector {
         if (properties.getDolphinscheduler().getToken().isBlank()) {
             return;
         }
+
+        detectWorkflowTimeouts();
+        detectTaskTimeouts();
+    }
+
+    private void detectWorkflowTimeouts() {
+        List<WorkflowInstance> runningWorkflows = dsClient.getRunningWorkflows();
+        log.debug("Checking {} running workflows for timeout", runningWorkflows.size());
+
+        for (WorkflowInstance workflow : runningWorkflows) {
+            checkWorkflowTimeout(workflow);
+        }
+    }
+
+    private void detectTaskTimeouts() {
         List<TaskInstance> runningTasks = dsClient.getRunningTasks();
         log.debug("Checking {} running tasks for timeout", runningTasks.size());
 
         for (TaskInstance task : runningTasks) {
             checkTaskTimeout(task);
+        }
+    }
+
+    private void checkWorkflowTimeout(WorkflowInstance workflow) {
+        Optional<TimeoutPolicy> policy = policyProvider.findPolicy(
+                PolicyLevel.WORKFLOW, workflow.getWorkflowId(), workflow.getTeamId());
+
+        if (policy.isEmpty()) {
+            policy = policyProvider.findPolicy(PolicyLevel.TEAM, null, workflow.getTeamId());
+        }
+
+        if (policy.isEmpty()) {
+            return;
+        }
+
+        TimeoutPolicy p = policy.get();
+        int runningMinutes = workflow.getRunningMinutes();
+
+        if (runningMinutes > p.getTimeoutMinutes()) {
+            handleWorkflowTimeout(workflow, p, runningMinutes);
         }
     }
 
@@ -65,6 +100,40 @@ public class TimeoutDetector {
         if (workflowPolicy.isPresent()) return workflowPolicy;
 
         return policyProvider.findPolicy(PolicyLevel.TEAM, null, task.getTeamId());
+    }
+
+    private void handleWorkflowTimeout(WorkflowInstance workflow, TimeoutPolicy policy, int actualMinutes) {
+        TimeoutEvent event = TimeoutEvent.builder()
+                .workflowId(workflow.getWorkflowId())
+                .workflowName(workflow.getWorkflowName())
+                .taskId(null)
+                .taskName(null)
+                .teamId(workflow.getTeamId())
+                .policyLevel(policy.getLevel())
+                .timeoutMinutes(policy.getTimeoutMinutes())
+                .actualDurationMinutes(actualMinutes)
+                .actionTaken(policy.getAction())
+                .detectedAt(LocalDateTime.now())
+                .escalated(false)
+                .build();
+
+        timeoutEventRepository.save(event);
+        metrics.recordTimeout(workflow.getTeamId(), policy.getLevel().name());
+
+        auditService.log(AuditAction.TIMEOUT_DETECTED, "system",
+                "workflow", workflow.getWorkflowId(),
+                String.format("Workflow '%s' exceeded timeout: %d/%d minutes",
+                        workflow.getWorkflowName(), actualMinutes, policy.getTimeoutMinutes()));
+
+        if (policy.getAction() == TimeoutAction.ALERT || policy.getAction() == TimeoutAction.ALERT_AND_KILL) {
+            alertService.sendAlert(event, policy);
+        }
+
+        if (policy.getAction() == TimeoutAction.KILL || policy.getAction() == TimeoutAction.ALERT_AND_KILL) {
+            dsClient.killWorkflow(workflow.getWorkflowId());
+            auditService.log(AuditAction.TASK_KILLED, "system",
+                    "workflow", workflow.getWorkflowId(), "Workflow killed due to timeout policy");
+        }
     }
 
     private void handleTimeout(TaskInstance task, TimeoutPolicy policy, int actualMinutes) {

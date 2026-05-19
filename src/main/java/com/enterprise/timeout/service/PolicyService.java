@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +27,18 @@ public class PolicyService {
 
     public List<TimeoutPolicy> listAllEnabled() {
         return policyRepository.findByEnabledTrue();
+    }
+
+    public List<TimeoutPolicy> listByLevelAndFilters(PolicyLevel level, String teamId, Boolean enabled) {
+        return policyRepository.findByEnabledTrue().stream()
+                .filter(p -> p.getLevel() == level)
+                .filter(p -> teamId == null || teamId.isBlank() || p.getTeamId().equals(teamId))
+                .filter(p -> enabled == null || p.isEnabled() == enabled)
+                .collect(Collectors.toList());
+    }
+
+    public Optional<TimeoutPolicy> getByLevelAndTarget(PolicyLevel level, String targetId) {
+        return policyRepository.findByLevelAndTargetId(level, targetId);
     }
 
     public Optional<TimeoutPolicy> getById(String id) {
@@ -59,6 +72,17 @@ public class PolicyService {
         auditService.log(AuditAction.POLICY_UPDATED, "user",
                 "policy", saved.getId(),
                 String.format("Updated policy '%s'", saved.getName()));
+        return saved;
+    }
+
+    public TimeoutPolicy toggleEnabled(String id) {
+        TimeoutPolicy existing = policyRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Policy not found: " + id));
+        existing.setEnabled(!existing.isEnabled());
+        TimeoutPolicy saved = policyRepository.save(existing);
+        auditService.log(AuditAction.POLICY_UPDATED, "user",
+                "policy", saved.getId(),
+                String.format("Toggled policy '%s' enabled=%s", saved.getName(), saved.isEnabled()));
         return saved;
     }
 

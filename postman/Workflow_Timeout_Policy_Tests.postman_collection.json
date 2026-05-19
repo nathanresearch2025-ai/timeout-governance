@@ -1,0 +1,634 @@
+{
+  "info": {
+    "name": "Workflow Timeout Policy API Tests",
+    "description": "Complete test collection for Workflow-level timeout policy management API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://1.14.131.61:8090",
+      "type": "string"
+    },
+    {
+      "key": "workflowPolicyId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "General Policy API",
+      "item": [
+        {
+          "name": "List All Policies (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policies?page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "policies"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has paginated content', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('content');",
+                  "    pm.expect(jsonData).to.have.property('totalElements');",
+                  "    pm.expect(jsonData.content).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Policies - Filter by WORKFLOW Level",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policies?page=0&size=10&level=WORKFLOW",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "policies"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" },
+                { "key": "level", "value": "WORKFLOW" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('All results are WORKFLOW level', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.content.forEach(function(policy) {",
+                  "        pm.expect(policy.level).to.equal('WORKFLOW');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Policies - Filter by Team",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/policies?page=0&size=10&teamId=data-engineering",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "policies"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" },
+                { "key": "teamId", "value": "data-engineering" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('All results belong to data-engineering team', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.content.forEach(function(policy) {",
+                  "        pm.expect(policy.teamId).to.equal('data-engineering');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Workflow Policy API",
+      "item": [
+        {
+          "name": "List All Workflow Policies",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflow-policies",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workflow-policies"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response is an array', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});",
+                  "pm.test('All policies are WORKFLOW level', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.forEach(function(policy) {",
+                  "        pm.expect(policy.level).to.equal('WORKFLOW');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Workflow Policies - Filter by Team",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflow-policies?teamId=data-engineering",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workflow-policies"],
+              "query": [
+                { "key": "teamId", "value": "data-engineering" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Filtered by team correctly', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.forEach(function(policy) {",
+                  "        pm.expect(policy.teamId).to.equal('data-engineering');",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Workflow Policy",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nightly Report Workflow\",\n  \"targetId\": \"workflow-nightly-report-001\",\n  \"teamId\": \"analytics-team\",\n  \"timeoutMinutes\": 90,\n  \"action\": \"ALERT_AND_KILL\",\n  \"alertChannels\": \"email,dingtalk\",\n  \"escalationMinutes\": 20,\n  \"escalationContacts\": \"analytics-lead@company.com\",\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflow-policies",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workflow-policies"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Policy created with WORKFLOW level', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.level).to.equal('WORKFLOW');",
+                  "    pm.expect(jsonData.name).to.equal('Nightly Report Workflow');",
+                  "    pm.expect(jsonData.targetId).to.equal('workflow-nightly-report-001');",
+                  "    pm.expect(jsonData.timeoutMinutes).to.equal(90);",
+                  "    pm.expect(jsonData.action).to.equal('ALERT_AND_KILL');",
+                  "    pm.expect(jsonData.id).to.not.be.empty;",
+                  "    pm.collectionVariables.set('workflowPolicyId', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Workflow Policy by Target ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflow-policies/target/workflow-nightly-report-001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workflow-policies", "target", "workflow-nightly-report-001"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Correct policy returned', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.targetId).to.equal('workflow-nightly-report-001');",
+                  "    pm.expect(jsonData.level).to.equal('WORKFLOW');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Workflow Policy",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Nightly Report Workflow (Updated)\",\n  \"targetId\": \"workflow-nightly-report-001\",\n  \"teamId\": \"analytics-team\",\n  \"timeoutMinutes\": 120,\n  \"action\": \"ESCALATE\",\n  \"alertChannels\": \"email,dingtalk,wechat\",\n  \"escalationMinutes\": 15,\n  \"escalationContacts\": \"analytics-lead@company.com,cto@company.com\",\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflow-policies/{{workflowPolicyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workflow-policies", "{{workflowPolicyId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Policy updated correctly', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.name).to.equal('Nightly Report Workflow (Updated)');",
+                  "    pm.expect(jsonData.timeoutMinutes).to.equal(120);",
+                  "    pm.expect(jsonData.action).to.equal('ESCALATE');",
+                  "    pm.expect(jsonData.level).to.equal('WORKFLOW');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Toggle Workflow Policy Enabled",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflow-policies/{{workflowPolicyId}}/toggle",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workflow-policies", "{{workflowPolicyId}}", "toggle"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Policy toggled to disabled', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.enabled).to.equal(false);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Toggle Workflow Policy Enabled (Back to true)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflow-policies/{{workflowPolicyId}}/toggle",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workflow-policies", "{{workflowPolicyId}}", "toggle"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Policy toggled back to enabled', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.enabled).to.equal(true);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Workflow Policy",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflow-policies/{{workflowPolicyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workflow-policies", "{{workflowPolicyId}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 204', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify Deletion - Get Deleted Policy Target",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflow-policies/target/workflow-nightly-report-001",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workflow-policies", "target", "workflow-nightly-report-001"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404 - policy deleted', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Workflow Policy - Edge Cases",
+      "item": [
+        {
+          "name": "Create Policy with ALERT action",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Data Ingestion Workflow\",\n  \"targetId\": \"workflow-ingest-001\",\n  \"teamId\": \"data-engineering\",\n  \"timeoutMinutes\": 180,\n  \"action\": \"ALERT\",\n  \"alertChannels\": \"email\",\n  \"escalationMinutes\": 30,\n  \"escalationContacts\": \"data-oncall@company.com\",\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflow-policies",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workflow-policies"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('ALERT action policy created', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.action).to.equal('ALERT');",
+                  "    pm.expect(jsonData.level).to.equal('WORKFLOW');",
+                  "    pm.collectionVariables.set('workflowPolicyId', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Policy with KILL action",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Batch Processing Workflow\",\n  \"targetId\": \"workflow-batch-process-001\",\n  \"teamId\": \"platform-team\",\n  \"timeoutMinutes\": 60,\n  \"action\": \"KILL\",\n  \"alertChannels\": \"dingtalk\",\n  \"escalationMinutes\": 0,\n  \"escalationContacts\": \"\",\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflow-policies",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workflow-policies"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('KILL action policy created', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.action).to.equal('KILL');",
+                  "    pm.expect(jsonData.level).to.equal('WORKFLOW');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Disabled Workflow Policy",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Deprecated Sync Workflow\",\n  \"targetId\": \"workflow-old-sync-001\",\n  \"teamId\": \"legacy-team\",\n  \"timeoutMinutes\": 300,\n  \"action\": \"ALERT\",\n  \"alertChannels\": \"email\",\n  \"escalationMinutes\": 60,\n  \"escalationContacts\": \"legacy-owner@company.com\",\n  \"enabled\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflow-policies",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workflow-policies"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Disabled policy created', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.enabled).to.equal(false);",
+                  "    pm.expect(jsonData.level).to.equal('WORKFLOW');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Non-existent Target - 404",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflow-policies/target/non-existent-workflow",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "workflow-policies", "target", "non-existent-workflow"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Timeout Events",
+      "item": [
+        {
+          "name": "List Timeout Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/timeout-events?page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "timeout-events"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has paginated content', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('content');",
+                  "    pm.expect(jsonData.content).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Unresolved Timeout Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/timeout-events/unresolved",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "timeout-events", "unresolved"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response is an array of unresolved events', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "    jsonData.forEach(function(event) {",
+                  "        pm.expect(event.resolvedAt).to.be.null;",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

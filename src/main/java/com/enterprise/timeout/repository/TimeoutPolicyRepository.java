@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TimeoutPolicyRepository extends JpaRepository<TimeoutPolicy, String> {
@@ -19,6 +20,8 @@ public interface TimeoutPolicyRepository extends JpaRepository<TimeoutPolicy, St
     List<TimeoutPolicy> findByTeamId(String teamId);
 
     List<TimeoutPolicy> findByLevel(PolicyLevel level);
+
+    Optional<TimeoutPolicy> findByLevelAndTargetId(PolicyLevel level, String targetId);
 
     @Query("SELECT p FROM TimeoutPolicy p WHERE " +
             "(:teamId IS NULL OR p.teamId = :teamId) AND " +
