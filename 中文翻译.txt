@@ -97,3 +97,22 @@ CI/CD 流程
 包含单元测试（Unit tests）。
 
 包含 Docker 镜像自动化构建。
+
+
+
+
+
+
+
+
+
+  业务背景： 银行日终结算、对账、客户数据汇总等批处理作业，必须在第二天开盘前完成，错过窗口会影响交易。
+
+  用上的代码能力：
+  - PolicyLevel.WORKFLOW 给"日终结算工作流"设置 4 小时超时
+  - TimeoutAction.ALERT_AND_KILL 超时后自动 kill 卡死的作业，避免资源占用累积
+  - EscalationService 15 分钟未处理升级到值班 leader、再 30 分钟升级到部门总监
+  - DingTalkAlertChannel + EmailAlertChannel 双通道告警
+  - AuditService 留痕，满足银保监合规审计要求
+  
+  为什么需要： 银行批处理一旦卡死，下游所有依赖任务全部阻塞，且监管要求每个异常都要有处置记录。
